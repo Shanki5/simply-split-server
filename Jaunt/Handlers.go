@@ -1,16 +1,13 @@
 package Jaunt
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/Shanki5/simply-split-server/config"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
-func GetAllJaunts(context *gin.Context) {
-
-}
 
 func AddJaunt(context *gin.Context) {
 
@@ -55,47 +52,65 @@ func AddExpense(context *gin.Context) {
 	context.IndentedJSON(http.StatusCreated, newExpense)
 }
 
-// func getAllJaunts(context *gin.Context) {
-// 	context.IndentedJSON(http.StatusOK, jaunts)
-// }
+func GetAllJaunts(context *gin.Context) {
+	var jaunts []Jaunt
+	err := config.DB.Model(&Jaunt{}).Preload("Expenses").Preload("Expenses.PaidBy").Preload("Expenses.PaidFor").Find(&jaunts).Error
+	if err != nil {
+		context.Status(400)
+		return
+	}
+	context.IndentedJSON(http.StatusOK, jaunts)
+}
 
-// func addJaunt(context *gin.Context) {
-// 	var newJaunt Jaunt
+func GetJauntByID(context *gin.Context) {
 
-// 	if err := context.BindJSON(&newJaunt); err != nil {
-// 		return
-// 	}
+	jauntId, err := uuid.Parse(context.Param("jauntId"))
 
-// 	jaunts = append(jaunts, newJaunt)
+	if err != nil {
+		context.Status(400)
+		return
+	}
 
-// 	context.IndentedJSON(http.StatusCreated, newJaunt)
-// }
+	var jaunt Jaunt
+	err = config.DB.Model(&Jaunt{}).Preload("Expenses").Preload("Expenses.PaidBy").Preload("Expenses.PaidFor").First(&jaunt, jauntId).Error
+	if err != nil {
+		context.Status(400)
+		return
+	}
 
-// func getExpenses(context *gin.Context) {
-// 	jauntId := context.Param("jauntId")
-// 	fmt.Println(jauntId)
-// 	var expenses []Expense
-// 	for _, jaunt := range jaunts {
-// 		if jaunt.ID == jauntId {
-// 			expenses = append(expenses, jaunt.Expenses...)
-// 		}
-// 	}
-// 	context.IndentedJSON(http.StatusOK, expenses)
-// }
-// func addExpense(context *gin.Context) {
-// 	jauntId := context.Param("jauntId")
-// 	var newExpense Expense
+	context.IndentedJSON(http.StatusOK, jaunt)
+}
 
-// 	if err := context.BindJSON(&newExpense); err != nil {
-// 		return
-// 	}
-// 	fmt.Println(newExpense)
-// 	for _, jaunt := range jaunts {
-// 		if jaunt.ID == jauntId {
-// 			currJaunt := &jaunt
-// 			currJaunt.Expenses = append(jaunt.Expenses, newExpense)
-// 			fmt.Println(jaunt.Expenses)
-// 		}
-// 	}
-// 	context.IndentedJSON(http.StatusCreated, newExpense)
-// }
+func UpdateExpense(context *gin.Context) {
+	jauntID, err := uuid.Parse(context.Param("jauntId"))
+
+	if err != nil {
+		context.Status(400)
+		return
+	}
+
+	expenseID, err := uuid.Parse(context.Param("expenseId"))
+
+	if err != nil {
+		context.Status(400)
+		return
+	}
+
+	var expense Expense
+	if err := context.BindJSON(&expense); err != nil {
+		return
+	}
+
+	expense.JauntID = jauntID
+	expense.ID = expenseID
+
+	err = config.DB.Save(&expense).Error
+	if err != nil {
+		fmt.Println(err)
+		context.Status(401)
+		return
+	}
+
+	context.Status(http.StatusAccepted)
+
+}

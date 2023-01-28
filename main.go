@@ -15,10 +15,12 @@ func main() {
 
 	superGroup := router.Group("/jaunts")
 	{
-		// superGroup.GET("", getAllJaunts)
+		superGroup.GET("", Jaunt.GetAllJaunts)
 		superGroup.POST("", Jaunt.AddJaunt)
 		// superGroup.GET("/:jauntId/expenses", getExpenses)
 		superGroup.POST("/:jauntId/expenses", Jaunt.AddExpense)
+		superGroup.GET("/:jauntId", Jaunt.GetJauntByID)
+		superGroup.PUT("/:jauntId/expenses/:expenseId", Jaunt.UpdateExpense)
 	}
 	router.Run("localhost:8080")
 }
