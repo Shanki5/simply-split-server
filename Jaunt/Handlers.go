@@ -31,19 +31,20 @@ func AddExpense(context *gin.Context) {
 	jauntId, err := uuid.Parse(context.Param("jauntId"))
 
 	if err != nil {
+		fmt.Println(err)
 		context.Status(400)
 		return
 	}
 
 	var newExpense Expense
 
-	if err := context.BindJSON(&newExpense); err != nil {
-		return
-	}
 	newExpense.JauntID = jauntId
 
+	if err := context.BindJSON(&newExpense); err != nil {
+		fmt.Println(err)
+		return
+	}
 	result := config.DB.Create(&newExpense)
-
 	if result.Error != nil {
 		context.Status(400)
 		return

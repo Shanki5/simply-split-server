@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/Shanki5/simply-split-server/Jaunt"
 	"github.com/Shanki5/simply-split-server/config"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,6 +13,16 @@ func init() {
 }
 func main() {
 	router := gin.Default()
+
+	// router.Use(cors.New(cors.Config{
+	// 	AllowOrigins:     []string{"*"},
+	// 	AllowMethods:     []string{"PUT", "POST", "GET", "OPTIONS"},
+	// 	AllowHeaders:     []string{"Origin", "Accept", "Authorization"},
+	// 	ExposeHeaders:    []string{"Content-Length"},
+	// 	AllowCredentials: true,
+	// 	MaxAge:           12 * time.Hour,
+	// }))
+	router.Use(cors.Default())
 
 	superGroup := router.Group("/jaunts")
 	{
