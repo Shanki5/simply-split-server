@@ -33,5 +33,8 @@ func main() {
 		superGroup.GET("/:jauntId", Jaunt.GetJauntByID)
 		superGroup.PUT("/:jauntId/expenses/:expenseId", Jaunt.UpdateExpense)
 	}
+
+	router.GET("/users", Jaunt.GetAllUsers)
+	
 	router.Run("localhost:8080")
 }

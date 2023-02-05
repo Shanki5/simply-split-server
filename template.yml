@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Simply-Split-Server
+  
+  SAM Template for Simply-Split-Server
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 30
+
+Parameters:
+  APIDeploymentStage:
+    Type: String
+    Default: dev
+
+
+Resources:
+  SimplySplitupApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref APIDeploymentStage
+      OpenApiVersion: "2.0"
+      Cors:
+        AllowMethods: "'POST, GET, PUT, DELETE'"
+        AllowOrigin: "'*'"
+        AllowHeaders: "'*'"
+      GatewayResponses: # mandatory property to avoid CORS issues when request gets failed at api-gateway level
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: "'*'"
+
+  SimplySplitupFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri:
+        Bucket: simple-splitup-server
+        Key: cmd/cmd.zip
+      Handler: cmd
+      Runtime: go1.x
+      Timeout: 30
+      # Role: !GetAtt .Arn
+      Events:
+        Healthcheck:
+          Type: Api
+          Properties:
+            RestApiId: !Ref SimplySplitupApi
+            Path: '/health/server/'
+            Method: get
+        GetAllJaunts:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:  
+            RestApiId: !Ref SimplySplitupApi
+            Path: '/jaunts'
+            Method: get
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: 'prod'
+
+Outputs:
+  # ServerlessRestApi is an implicit API created out of Events key under Serverless::Function
+  # Find out more about other implicit resources you can reference within SAM
+  # https://github.com/awslabs/serverless-application-model/blob/master/docs/internals/generated_resources.rst#api
+  SimplySplitupAPI:
+    Description: "API Gateway endpoint URL for Prod environment for Simply Splitup"
+    Value: !Sub "https://${SimplySplitupApi}.execute-api.${AWS::Region}.amazonaws.com/${APIDeploymentStage}/"

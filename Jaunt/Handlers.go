@@ -115,3 +115,15 @@ func UpdateExpense(context *gin.Context) {
 	context.Status(http.StatusAccepted)
 
 }
+
+func GetAllUsers(context *gin.Context) {
+	var users []User
+
+	err := config.DB.Model(&User{}).Find(&users).Error
+	if err != nil {
+		context.Status(500)
+		return
+	}
+
+	context.IndentedJSON(http.StatusOK, users)
+}
